@@ -164,3 +164,59 @@ if _name_ == "_main_":
     ax.bar(["DQN", "ResNet"], [dur_dqn, dur_res])
     SummaryWriter(log_dir=DIR_LOGS).add_figure("Comparativa", fig, TOTAL_TIMESTEPS)
     plt.close(fig)
+
+
+#Extraccion de los videos del agente
+for f in glob.glob(os.path.join(VIDEO_DIR, "dqn_final*.mp4")):
+    os.remove(f)
+env_vid = VecFrameStack(
+    make_atari_env(ENV_ID, n_envs=1, seed=SEED),
+    FRAME_STACK
+)
+vid_rec = VecVideoRecorder(
+    env_vid,
+    VIDEO_DIR,
+    record_video_trigger=lambda x: x == 0,
+    video_length=FINAL_VIDEO_LENGTH,
+    name_prefix="dqn_final"
+)
+obs, total_reward = vid_rec.reset(), 0
+for _ in range(FINAL_VIDEO_LENGTH):
+    action, _ = model_dqn.predict(obs, deterministic=True)
+    obs, rew, done, _ = vid_rec.step(action)
+    total_reward += rew[0]
+    if done[0]:
+        obs = vid_rec.reset()
+vid_rec.close()
+print(f"🏆 Video DQN: {glob.glob(os.path.join(VIDEO_DIR, 'dqn_final*.mp4'))[-1]}  Rew={total_reward:.1f}")
+
+for f in glob.glob(os.path.join(VIDEO_DIR, "resnet_final*.mp4")):
+    os.remove(f)
+env_vid = VecFrameStack(
+    make_atari_env(ENV_ID, n_envs=1, seed=SEED),
+    FRAME_STACK
+)
+vid_rec = VecVideoRecorder(
+    env_vid,
+    VIDEO_DIR,
+    record_video_trigger=lambda x: x == 0,
+    video_length=FINAL_VIDEO_LENGTH,
+    name_prefix="resnet_final"
+)
+obs, total_reward = vid_rec.reset(), 0
+for _ in range(FINAL_VIDEO_LENGTH):
+    action, _ = model_res.predict(obs, deterministic=True)
+    obs, rew, done, _ = vid_rec.step(action)
+    total_reward += rew[0]
+    if done[0]:
+        obs = vid_rec.reset()
+vid_rec.close()
+print(f"🏆 Video ResNet: {glob.glob(os.path.join(VIDEO_DIR, 'resnet_final*.mp4'))[-1]}  Rew={total_reward:.1f}")
+
+try:
+    if os.name == 'nt':
+        os.startfile(os.path.abspath(VIDEO_DIR))
+except:
+    pass
+
+print("\n✅ Proceso completado.")
