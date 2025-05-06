@@ -164,7 +164,3 @@ if _name_ == "_main_":
     ax.bar(["DQN", "ResNet"], [dur_dqn, dur_res])
     SummaryWriter(log_dir=DIR_LOGS).add_figure("Comparativa", fig, TOTAL_TIMESTEPS)
     plt.close(fig)
-
-    print(f"Logs TB en: {DIR_LOGS}")
-    print("Ejecuta: tensorboard --logdir", DIR_LOGS)
-    print("Verás dos runs: dqn_run y resnet_run en la interfaz.")
