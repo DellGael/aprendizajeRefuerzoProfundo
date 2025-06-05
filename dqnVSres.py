@@ -13,7 +13,7 @@ import numpy as np
 from torchsummary import summary
 from torch.utils.tensorboard import SummaryWriter
 from stable_baselines3 import DQN
-from networks import ResNetExtractorBN
+from networks import ResNetExtractor
 from stable_baselines3.common.env_util import make_atari_env
 from stable_baselines3.common.vec_env import VecFrameStack, VecTransposeImage, VecVideoRecorder
 from stable_baselines3.common.callbacks import CheckpointCallback
@@ -22,9 +22,9 @@ from stable_baselines3.common.logger import configure
 # ── Configuración general ────────────────────────────────────────
 gym.register_envs(ale_py)
 ENV_ID              = "BreakoutNoFrameskip-v4"
-TOTAL_TIMESTEPS     = 100000  # 10M pasos
+TOTAL_TIMESTEPS     = 4000000 # 10M pasos
 N_ENVS              = 10
-SEED                = 42
+SEED                = 0
 FRAME_STACK         = 4
 SAVE_FREQ           = 100
 N_EVAL_EPISODES     = 10  # Episodios por semilla
@@ -238,9 +238,9 @@ if __name__ == "__main__":
     cb_res      = CheckpointCallback(SAVE_FREQ, DIR_MODELS, name_prefix="resnet_atari")
 
     policy_kwargs = {
-        "features_extractor_class": ResNetExtractorBN,
-        "features_extractor_kwargs": {"features_dim": 800},
-        "net_arch": [800]
+        "features_extractor_class": ResNetExtractor,
+        "features_extractor_kwargs": {"features_dim": 512},
+        "net_arch": [512]   
         }
 
     model_res = DQN(
