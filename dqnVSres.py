@@ -13,7 +13,7 @@ import numpy as np
 from torchsummary import summary
 from torch.utils.tensorboard import SummaryWriter
 from stable_baselines3 import DQN
-from networks import ResNetExtractor
+from networks import ImpalaResNetExtractor
 from stable_baselines3.common.env_util import make_atari_env
 from stable_baselines3.common.vec_env import VecFrameStack, VecTransposeImage, VecVideoRecorder
 from stable_baselines3.common.callbacks import CheckpointCallback
@@ -22,15 +22,15 @@ from stable_baselines3.common.logger import configure
 # ── Configuración general ────────────────────────────────────────
 gym.register_envs(ale_py)
 ENV_ID              = "BreakoutNoFrameskip-v4"
-TOTAL_TIMESTEPS     = 4000000 # 10M pasos
+TOTAL_TIMESTEPS     = 400000 # 10M pasos
 N_ENVS              = 10
 SEED                = 0
 FRAME_STACK         = 4
 SAVE_FREQ           = 100
-N_EVAL_EPISODES     = 10  # Episodios por semilla
+N_EVAL_EPISODES     = 100  # Episodios por semilla
 N_EVAL_SEEDS        = 5   # Número de semillas para evaluación
 EVAL_SEEDS          = [42, 123, 456, 789, 1024]  # Semillas específicas
-FINAL_VIDEO_LENGTH  = 2_500
+FINAL_VIDEO_LENGTH  = 5000
 
 DIR_IMAGES = ENV_ID + "-images"
 DIR_MODELS = ENV_ID + "-models"
@@ -176,9 +176,9 @@ if __name__ == "__main__":
         env=env_dqn,
         tensorboard_log=log_dir_dqn,
         learning_rate=2.5e-4,
-        buffer_size=50000,
+        buffer_size=70000,
         learning_starts=10_000,
-        batch_size=64,
+        batch_size=128,
         train_freq=4,
         gradient_steps=2,
         target_update_interval=10_000,
@@ -196,7 +196,6 @@ if __name__ == "__main__":
     t0 = time.time()
     model_dqn.learn(
         total_timesteps=TOTAL_TIMESTEPS,
-        callback=[cb_dqn],
         tb_log_name="cnn_run",
         reset_num_timesteps=True,
         progress_bar=True
@@ -237,20 +236,21 @@ if __name__ == "__main__":
     env_res     = make_env(N_ENVS)
     cb_res      = CheckpointCallback(SAVE_FREQ, DIR_MODELS, name_prefix="resnet_atari")
 
+    # Configuración de policy_kwargs mejorada
     policy_kwargs = {
-        "features_extractor_class": ResNetExtractor,
-        "features_extractor_kwargs": {"features_dim": 512},
-        "net_arch": [512]   
-        }
+            "features_extractor_class": ImpalaResNetExtractor,
+            "features_extractor_kwargs": {"features_dim": 256}
+            }
+
 
     model_res = DQN(
         policy="CnnPolicy",
         env=env_res,
         tensorboard_log=log_dir_res,
         learning_rate=2.5e-4,
-        buffer_size=50000,
+        buffer_size=70000,
         learning_starts=10_000,
-        batch_size=64,
+        batch_size=128,
         train_freq=4,
         gradient_steps=2,
         target_update_interval=10_000,
@@ -268,7 +268,6 @@ if __name__ == "__main__":
     t0 = time.time()
     model_res.learn(
         total_timesteps=TOTAL_TIMESTEPS,
-        callback=[cb_res],
         tb_log_name="resnet_run",
         reset_num_timesteps=True,
         progress_bar=True
